@@ -236,6 +236,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <header>
@@ -291,102 +292,96 @@ O que você quer saber hoje?
     </section>
   </main>
 
-  <script>
-    /* 🔵 URL DO BACKEND (ALTERE ASSIM QUE TIVER O LINK HTTPS DO CLOUDFARE) */
-    const BACKEND_URL = ""; // Ex: "https://SEU-LINK.trycloudflare.com/chat-te-levo"
+<script>
+  /* 🔵 URL REAL DO BACKEND */
+  const BACKEND_URL = "https://comparisons-particle-export-garmin.trycloudflare.com/chat-te-levo";
 
-    const chatWindow = document.getElementById("chat-window");
-    const userInput = document.getElementById("user-input");
-    const sendBtn = document.getElementById("send-btn");
-    const typingIndicator = document.getElementById("typing-indicator");
+  const chatWindow = document.getElementById("chat-window");
+  const userInput = document.getElementById("user-input");
+  const sendBtn = document.getElementById("send-btn");
+  const typingIndicator = document.getElementById("typing-indicator");
 
-    function addMessage(text, role) {
-      const msg = document.createElement("div");
-      msg.classList.add("message", role);
+  function addMessage(text, role) {
+    const msg = document.createElement("div");
+    msg.classList.add("message", role);
 
-      const avatar = document.createElement("div");
-      avatar.classList.add("avatar");
-      avatar.textContent = role === "assistant" ? "🅣" : "👤";
+    const avatar = document.createElement("div");
+    avatar.classList.add("avatar");
+    avatar.textContent = role === "assistant" ? "🅣" : "👤";
 
-      const bubbleWrapper = document.createElement("div");
-      const bubble = document.createElement("div");
-      bubble.classList.add("bubble");
-      bubble.textContent = text;
-      bubbleWrapper.appendChild(bubble);
+    const bubbleWrapper = document.createElement("div");
+    const bubble = document.createElement("div");
+    bubble.classList.add("bubble");
+    bubble.textContent = text;
+    bubbleWrapper.appendChild(bubble);
 
-      if (role === "assistant") {
-        msg.appendChild(avatar);
-        msg.appendChild(bubbleWrapper);
-      } else {
-        msg.appendChild(bubbleWrapper);
-        msg.appendChild(avatar);
-      }
-
-      chatWindow.appendChild(msg);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
+    if (role === "assistant") {
+      msg.appendChild(avatar);
+      msg.appendChild(bubbleWrapper);
+    } else {
+      msg.appendChild(bubbleWrapper);
+      msg.appendChild(avatar);
     }
 
-    function setTyping(isTyping) {
-      typingIndicator.style.display = isTyping ? "block" : "none";
-      chatWindow.scrollTop = chatWindow.scrollHeight;
+    chatWindow.appendChild(msg);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  function setTyping(isTyping) {
+    typingIndicator.style.display = isTyping ? "block" : "none";
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  async function callBackend(userText) {
+    try {
+      const response = await fetch(BACKEND_URL, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ mensagem: userText })
+      });
+
+      const data = await response.json();
+      return data.resposta || "A IA respondeu algo inesperado.";
+    } catch (err) {
+      return "❗ Erro ao conectar com o backend.";
     }
+  }
 
-    /* 🔥 Função REAL: chama seu backend Java */
-    async function callBackend(userText) {
-      if (!BACKEND_URL) {
-        return "❗ BACKEND_URL não configurado.\nEdite o index.html e coloque o link HTTPS do servidor.";
-      }
+  async function sendMessage() {
+    const text = userInput.value.trim();
+    if (!text) return;
 
-      try {
-        const response = await fetch(BACKEND_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ mensagem: userText })
-        });
+    addMessage(text, "user");
+    userInput.value = "";
+    userInput.style.height = "auto";
 
-        const data = await response.json();
-        return data.resposta || "A IA respondeu algo inesperado.";
-      } catch (err) {
-        return "❗ Erro ao conectar com o servidor da IA.\nVerifique o BACKEND_URL.";
-      }
+    setTyping(true);
+    sendBtn.disabled = true;
+
+    const reply = await callBackend(text);
+
+    setTimeout(() => {
+      addMessage(reply, "assistant");
+      setTyping(false);
+      sendBtn.disabled = false;
+    }, 400);
+  }
+
+  sendBtn.addEventListener("click", sendMessage);
+
+  userInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
+  });
 
-    async function sendMessage() {
-      const text = userInput.value.trim();
-      if (!text) return;
+  userInput.addEventListener("input", () => {
+    userInput.style.height = "auto";
+    userInput.style.height = userInput.scrollHeight + "px";
+  });
 
-      addMessage(text, "user");
-      userInput.value = "";
-      userInput.style.height = "auto";
+</script>
 
-      setTyping(true);
-      sendBtn.disabled = true;
-
-      const reply = await callBackend(text);
-
-      setTimeout(() => {
-        addMessage(reply, "assistant");
-        setTyping(false);
-        sendBtn.disabled = false;
-      }, 400);
-    }
-
-    sendBtn.addEventListener("click", sendMessage);
-
-    userInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-
-    userInput.addEventListener("input", () => {
-      userInput.style.height = "auto";
-      userInput.style.height = userInput.scrollHeight + "px";
-    });
-
-  </script>
 </body>
 </html>
