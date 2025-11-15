@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>IA Interna TE LEVO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: #f5f5f5;
+      color: #111;
+    }
+
+    /* TOPO PRETO COM LOGO */
+    header {
+      background: #000;
+      color: #fff;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header img {
+      height: 32px;
+      width: auto;
+    }
+
+    header .title-group {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    header .title-group span:first-child {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    header .title-group span:last-child {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 24px auto;
+      padding: 0 16px 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 120px);
+      max-height: 780px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .card-header h1 {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .card-header p {
+      font-size: 13px;
+      color: #555;
+    }
+
+    .chat-window {
+      flex: 1;
+      padding: 16px 20px;
+      overflow-y: auto;
+      background: #f9fafb;
+    }
+
+    .message {
+      display: flex;
+      margin-bottom: 12px;
+      max-width: 80%;
+    }
+
+    .message.assistant {
+      align-items: flex-start;
+    }
+
+    .message.user {
+      margin-left: auto;
+      justify-content: flex-end;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      margin-right: 8px;
+    }
+
+    .assistant .avatar {
+      background: #0074a8;
+      color: #fff;
+    }
+
+    .user .avatar {
+      background: #ccc;
+      color: #333;
+      margin-left: 8px;
+      margin-right: 0;
+    }
+
+    .bubble {
+      border-radius: 16px;
+      padding: 10px 12px;
+      font-size: 14px;
+      line-height: 1.5;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .assistant .bubble {
+      background: #e5f3fa;
+      color: #0b2940;
+      border-bottom-left-radius: 4px;
+    }
+
+    .user .bubble {
+      background: #f0f0f0;
+      color: #111;
+      border-bottom-right-radius: 4px;
+    }
+
+    .typing-indicator {
+      font-size: 12px;
+      color: #777;
+      margin-top: 4px;
+      margin-left: 40px;
+      display: none;
+    }
+
+    .card-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #eee;
+      background: #fff;
+      display: flex;
+      gap: 8px;
+    }
+
+    .input-box {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: #f5f5f5;
+      border-radius: 999px;
+      padding: 6px 12px;
+      border: 1px solid transparent;
+    }
+
+    .input-box:focus-within {
+      border-color: #0074a8;
+      background: #fff;
+    }
+
+    .input-box textarea {
+      border: none;
+      background: transparent;
+      resize: none;
+      width: 100%;
+      max-height: 80px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    button.send-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 0 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #00b046;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: transform 0.05s ease, box-shadow 0.05s ease, opacity 0.1s ease;
+    }
+
+    button.send-btn:disabled {
+      opacity: 0.6;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    button.send-btn:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,176,70,0.45);
+    }
+
+    button.send-btn span {
+      font-size: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .card {
+        height: calc(100vh - 80px);
+      }
+      .message {
+        max-width: 100%;
+      }
+      header {
+        padding: 10px 16px;
+      }
+      header img {
+        height: 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <!-- Troque o src pelo caminho da logo no próprio repositório, quando enviar o arquivo -->
+    <img src="logo-te-levo.png" alt="TE LEVO logo" />
+    <div class="title-group">
+      <span>Ambiente interno</span>
+      <span>IA Interna TE LEVO</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="card" aria-label="Chat IA Interna TE LEVO">
+      <div class="card-header">
+        <h1>Bem-vindo(a) à IA Interna TE LEVO</h1>
+        <p>Use este espaço para tirar dúvidas sobre franquias, operação, equipe e boas práticas da TE LEVO.</p>
+      </div>
+
+      <div class="chat-window" id="chat-window">
+        <!-- Mensagem inicial da IA -->
+        <div class="message assistant">
+          <div class="avatar">🅣</div>
+          <div>
+            <div class="bubble">
+Sou a IA Interna da TE LEVO. 
+Posso te ajudar com dúvidas sobre:
+
+• modelo de franquias  
+• operação e uso da plataforma  
+• boas práticas de atendimento  
+• visão geral da TE LEVO e da Taxi Machine
+
+O que você quer saber hoje?
+            </div>
+          </div>
+        </div>
+
+        <div id="typing-indicator" class="typing-indicator">
+          IA TE LEVO está digitando…
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <div class="input-box">
+          <textarea id="user-input" rows="1" placeholder="Digite sua pergunta aqui..." autocomplete="off"></textarea>
+        </div>
+        <button class="send-btn" id="send-btn">
+          <span>➤</span> Enviar
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const chatWindow = document.getElementById("chat-window");
+    const userInput = document.getElementById("user-input");
+    const sendBtn = document.getElementById("send-btn");
+    const typingIndicator = document.getElementById("typing-indicator");
+
+    function addMessage(text, role) {
+      const msg = document.createElement("div");
+      msg.classList.add("message", role);
+
+      const avatar = document.createElement("div");
+      avatar.classList.add("avatar");
+      avatar.textContent = role === "assistant" ? "🅣" : "👤";
+
+      const bubbleWrapper = document.createElement("div");
+      const bubble = document.createElement("div");
+      bubble.classList.add("bubble");
+      bubble.textContent = text;
+      bubbleWrapper.appendChild(bubble);
+
+      if (role === "assistant") {
+        msg.appendChild(avatar);
+        msg.appendChild(bubbleWrapper);
+      } else {
+        msg.appendChild(bubbleWrapper);
+        msg.appendChild(avatar);
+      }
+
+      chatWindow.appendChild(msg);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function simulateAssistantResponse(userText) {
+      // Aqui é apenas uma resposta FAKE para demonstração.
+      // Depois vamos trocar essa parte por uma chamada real à API no servidor.
+      const baseReply = 
+"Recebi sua pergunta:\n\n\"" + userText + "\"\n\n" +
+"No momento esta é apenas uma versão de demonstração da interface da IA Interna TE LEVO rodando no GitHub Pages.\n\n" +
+"Assim que a integração com a IA estiver conectada ao servidor, vou conseguir responder com base nas políticas, boas práticas e materiais oficiais da TE LEVO e da Taxi Machine.";
+
+      return baseReply;
+    }
+
+    function setTyping(isTyping) {
+      typingIndicator.style.display = isTyping ? "block" : "none";
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function sendMessage() {
+      const text = userInput.value.trim();
+      if (!text) return;
+
+      addMessage(text, "user");
+      userInput.value = "";
+      userInput.style.height = "auto";
+
+      setTyping(true);
+      sendBtn.disabled = true;
+
+      // Simula tempo de resposta da IA
+      setTimeout(() => {
+        const reply = simulateAssistantResponse(text);
+        addMessage(reply, "assistant");
+        setTyping(false);
+        sendBtn.disabled = false;
+      }, 900);
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+
+    userInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    userInput.addEventListener("input", () => {
+      userInput.style.height = "auto";
+      userInput.style.height = userInput.scrollHeight + "px";
+    });
+  </script>
+</body>
+</html>
